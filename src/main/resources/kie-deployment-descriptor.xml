@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<work-item-handler>
+  <resolver>mvel</resolver>
+  <identifier>new de.piu.datenhaus.addressvalidation.DatenhausAddressSignatureWorkItemHandler()</identifier>
+  <name>DatenhausAddressSignatureGenerator</name>
+</work-item-handler>
