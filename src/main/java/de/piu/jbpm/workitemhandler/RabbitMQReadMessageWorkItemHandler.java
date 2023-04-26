@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.example;
+package de.piu.jbpm.workitemhandler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,53 +29,72 @@ import org.jbpm.process.workitem.core.util.service.WidAuth;
 import org.jbpm.process.workitem.core.util.service.WidService;
 import org.jbpm.process.workitem.core.util.WidMavenDepends;
 
-@Wid(widfile="trueDefinitions.wid", name="trueDefinitions",
-        displayName="trueDefinitions",
-        defaultHandler="mvel: new org.example.trueWorkItemHandler()",
-        documentation = "RabbitMQReadMessageWorkItemHandler/index.html",
-        category = "RabbitMQReadMessageWorkItemHandler",
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import org.kie.internal.runtime.Cacheable;
+
+@Wid(widfile="${name}.wid", name="${name}",
+        displayName="${name}",
+        defaultHandler="mvel: new de.piu.jbpm.workitemhandler.RabbitMQReadMessageWorkItemHandler()",
+        category = "${artifactId}",
         icon = "trueDefinitions.png",
         parameters={
-            @WidParameter(name="SampleParam", required = true),
-            @WidParameter(name="SampleParamTwo", required = true)
+                @WidParameter(name="Queue", required = true),
+                @WidParameter(name="Message", required = true)
         },
         results={
-            @WidResult(name="SampleResult")
+            @WidResult(name="MessageSendResult")
         },
         mavenDepends={
-            @WidMavenDepends(group="org.example", artifact="RabbitMQReadMessageWorkItemHandler", version="1.0-SNAPSHOT")
+                @WidMavenDepends(group = "${groupId}", artifact = "${artifactId}", version = "${version}")
         },
-        serviceInfo = @WidService(category = "RabbitMQReadMessageWorkItemHandler", description = "${description}",
-                keywords = "",
-                action = @WidAction(title = "Sample Title"),
-                authinfo = @WidAuth(required = true, params = {"SampleParam", "SampleParamTwo"},
-                        paramsdescription = {"SampleParam", "SampleParamTwo"},
-                        referencesite = "referenceSiteURL")
+        serviceInfo = @WidService(category = "${name}", description = "${description}",
+                keywords = "rabbitMQ, send, task",
+                action = @WidAction(title = "Send RabbitMQ-Message"),
+                authinfo = @WidAuth(required = true, params = {"BrokerURI"},
+                        paramsdescription = {"Broker URI (amqp://user:pass@host:10000/vhost)"})
         )
 )
-public class trueWorkItemHandler extends AbstractLogOrThrowWorkItemHandler {
-        private String sampleParam;
-        private String sampleParamTwo;
+public class RabbitMQReadMessageWorkItemHandler extends AbstractLogOrThrowWorkItemHandler implements Cacheable {
+    private static final String EXCHANGE_NAME = "amq.direct";
+    private String brokerURI;
+        private String queue;
+        private String message;
 
-    public trueWorkItemHandler(String SampleParam, String SampleParamTwo){
-            this.sampleParam = sampleParam;
-            this.sampleParamTwo = sampleParamTwo;
+    public RabbitMQReadMessageWorkItemHandler(String BrokerURI, String Queue, String Message){
+            this.brokerURI = BrokerURI;
+            this.queue = Queue;
+            this.message = Message;
         }
 
     public void executeWorkItem(WorkItem workItem, WorkItemManager manager) {
         try {
             RequiredParameterValidator.validate(this.getClass(), workItem);
 
-            // sample parameters
-            sampleParam = (String) workItem.getParameter("SampleParam");
-            sampleParamTwo = (String) workItem.getParameter("SampleParamTwo");
+            //  parameters
+            brokerURI = (String) workItem.getParameter("BrokerURI");
+            queue = (String) workItem.getParameter("Queue");
+            message = (String) workItem.getParameter("Message");
+
 
             // complete workitem impl...
 
+            ConnectionFactory factory = new ConnectionFactory();
+            factory.setUri(brokerURI);
+            try (Connection connection = factory.newConnection();
+                 Channel channel = connection.createChannel()) {
+                channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+                channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + "'");
+            }
+
+
+
             // return results
-            String sampleResult = "sample result";
             Map<String, Object> results = new HashMap<String, Object>();
-            results.put("SampleResult", sampleResult);
+            Object messageSendResult = "";
+            results.put("MessageSendResult", messageSendResult);
 
 
             manager.completeWorkItem(workItem.getId(), results);
@@ -88,6 +107,11 @@ public class trueWorkItemHandler extends AbstractLogOrThrowWorkItemHandler {
     public void abortWorkItem(WorkItem workItem,
                               WorkItemManager manager) {
         // stub
+    }
+
+    @Override
+    public void close() {
+
     }
 }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <work-item-handler>
   <resolver>mvel</resolver>
-  <identifier>new de.piu.datenhaus.addressvalidation.DatenhausAddressSignatureWorkItemHandler()</identifier>
-  <name>DatenhausAddressSignatureGenerator</name>
+  <identifier>new de.piu.jbpm.workitemhandler.RabbitMQReadMessageWorkItemHandler()</identifier>
+  <name>RabbitMQReadMessageWorkItemHandler</name>
 </work-item-handler>
