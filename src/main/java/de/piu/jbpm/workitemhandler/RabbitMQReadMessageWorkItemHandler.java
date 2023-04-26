@@ -50,8 +50,8 @@ import org.kie.internal.runtime.Cacheable;
                 @WidMavenDepends(group = "${groupId}", artifact = "${artifactId}", version = "${version}")
         },
         serviceInfo = @WidService(category = "${name}", description = "${description}",
-                keywords = "rabbitMQ, send, task",
-                action = @WidAction(title = "Send RabbitMQ-Message"),
+                keywords = "rabbitMQ, read, queue, task",
+                action = @WidAction(title = "Read RabbitMQ-Message"),
                 authinfo = @WidAuth(required = true, params = {"BrokerURI"},
                         paramsdescription = {"Broker URI (amqp://user:pass@host:10000/vhost)"})
         )
